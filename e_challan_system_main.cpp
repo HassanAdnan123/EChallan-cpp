@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
+#include <conio.h>
 #include <fstream>
 #include <string>
 using namespace std;
@@ -19,14 +20,98 @@ void welcomeMessage() {
 	cout<<"\t\t - View your vehicle's tax history\n\n";
 }
 
-void newRegistration(){
+void doPayment(string cnic){
+	
+	string toCheckCNIC;
+	bool payment = false;
+	
+	//First of all, check if user has already paid.
+	ifstream file2;
+	file2.open("database\\registeredpaidcnic.txt");
+	while (std::getline(file2, toCheckCNIC))
+    {
+        if(toCheckCNIC==cnic){
+        	payment = true;
+        	cout<<"You have already registered and paid your tax.\nThank you for using E-Challan System"<<endl;
+		}
+    }
+	
+	if(!payment) {
+		string bank, iban;
+		int balance;
+		cout<<"Registration fee is 2500 PKR.\n"<<endl;
+		cout<<"Bank: (HBL, UBL etc.): "; cin>>bank;
+		cout<<"IBAN: "; cin>>iban;
+		cout<<"Balance in Account: "; cin>>balance;
+		cout<<"\n\nRegistration fee worth 2500PKR has been paid.\n\n";
+		balance = balance-2500;
+		cout<<"New Account Balance: "<<balance;
+		
+		ofstream file3, file4;
+		
+		// Saving vehicle details in a separate file in payment details folder
+		string outputFileNameConvention = "paymentdetails\\"+cnic;
+		file3.open(outputFileNameConvention.c_str());
+		file3<<"Bank: "<<bank<<endl<<"IBAN: "<<iban<<endl<<"Available Balance: "<<balance;
+		file3.close();
+		
+		//Saving cnic in paid users file
+		file4.open("database\\registeredpaidcnic.txt",std::ios_base::app);
+		file4<<endl<<cnic<<endl;
+		file4.close();
+		cout<<"\nPayment successful! You're a registered tax payer.\nPress any key to go back.";
+	}
+		getch();
+}
+
+void viewDetails(string cnic){
+	
+	ifstream file, file2;
+	
+	file.open("database\\registeredcnic.txt");
+	file2.open("database\\registeredpaidcnic.txt");
+	
+	string toCheckCNIC;
+	
+	//User registered Data
+	while (std::getline(file, toCheckCNIC))
+    {
+        if(toCheckCNIC==cnic){
+        	ifstream file3;
+        	string data;
+        	string filename = "vehicledetails\\"+cnic;
+        	file3.open(filename.c_str());
+        	while (std::getline(file3, data))
+		    {
+		    	cout<<data<<endl;
+		    }
+		}
+    }
+    
+    //User payments Data
+    while (std::getline(file2, toCheckCNIC))
+    {
+        if(toCheckCNIC==cnic){
+        	ifstream file3;
+        	string data;
+        	string filename = "paymentdetails\\"+cnic;
+        	file3.open(filename.c_str());
+        	while (std::getline(file3, data))
+		    {
+		    	cout<<data<<endl;
+		    }
+		}
+    }
+	
+	cout<<"\n\n Press any key to go back. ";
+	getch();
+}
+
+void newRegistration(string cnic){
 	system("cls");
-	string cnic;
 	printTitlesAndLogo();
 	
 	cout<<"----- NEW REGISTRATION OF VEHICLE \n";
-	cout<<"Please enter CNIC: ";
-	cin>>cnic;
 	
 	ifstream file, file2;		//file1 is for registration, file2 is for payment
 	
@@ -61,10 +146,13 @@ void newRegistration(){
 	}
 	else if(registered)
 	{
-		cout<<"You have already registered but haven't paid registration fee.\nDo you wish to pay your tax?"<<endl;
-		system("pause");
 		file.close();
 		file2.close();
+
+		string proceedToPay;
+		cout<<"You have already registered but haven't paid registration fee.\nDo you wish to pay your tax? (Y/N)"<<endl;
+		cin>>proceedToPay;
+		if(proceedToPay == "Y") { doPayment(cnic); }
 	}
 	else {
 		file.close();
@@ -94,7 +182,7 @@ void newRegistration(){
 		file4.close();
 		
 	}
-	system("pause");
+	getch();
 	file.close();
 	
 }
@@ -127,10 +215,15 @@ int main(){
 			cout<<"\t (1) NEW VEHICLE REGISTRATION\n";
 			cout<<"\t (2) VIEW YOUR DETAILS\n";
 			cout<<"\t (3) PAY YOUR CHALLAN / TAX\n";
-			cout<<"\t (0) EXIT / TAX\n";
+			cout<<"\t (0) EXIT / TAX\nYour Choice: ";
 			cin>>choice;
-			
-			if(choice == 1) { newRegistration(); }
+			string cnic;
+			cout<<"\nPlease enter CNIC: ";
+			cin>>cnic;
+			if(choice == 1) { newRegistration(cnic); }
+			if(choice == 2) { viewDetails(cnic); }
+			if(choice == 3) { doPayment(cnic); }
+
 		}
 		while(choice!=0);
 		}
